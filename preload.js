@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
             'buscar-vendas',
             'cancelar-venda',
             'imprimir-recibo',
+            'buscar-dados-recibo',
             'buscar-clientes',
             'salvar-cliente',
             'atualizar-cliente',

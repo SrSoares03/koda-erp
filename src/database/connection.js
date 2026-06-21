@@ -9,35 +9,80 @@ const db = new sqlite3.Database(caminhoBanco, (err) => {
     else console.log('✅ Banco de dados SQLite conectado em:', caminhoBanco);
 });
 
-// Habilita as chaves estrangeiras
+// Habilita as chaves estrangeiras para garantir a integridade dos dados
 db.run("PRAGMA foreign_keys = ON");
 
-// Criação das tabelas
-    db.serialize(() => {
-        // TABELA: Produtos (Atualizada com Código de Barras)
-        db.run(`CREATE TABLE IF NOT EXISTS produtos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT, 
-            medida TEXT, 
-            custo REAL, 
-            venda REAL, 
-            quantidade REAL,
-            codigo_barras TEXT
-        )`);
+// Criação das tabelas (Ordem Hierárquica)
+db.serialize(() => {
+    
+    // ==========================================
+    // 1. TABELAS DE CADASTRO BASE
+    // ==========================================
+    
+    // Produtos
+    db.run(`CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT, 
+        medida TEXT, 
+        custo REAL, 
+        venda REAL, 
+        quantidade REAL,
+        codigo_barras TEXT
+    )`);
+    db.run("ALTER TABLE produtos ADD COLUMN codigo_barras TEXT", (err) => {});
 
-        // Truque de atualização: Tenta adicionar a coluna caso a tabela já exista
-        // (Ele vai dar um erro invisível no fundo se a coluna já existir, e tudo bem!)
-        db.run("ALTER TABLE produtos ADD COLUMN codigo_barras TEXT", (err) => {});
+    // Clientes
+    db.run(`CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL, 
+        documento TEXT, 
+        telefone TEXT, 
+        email TEXT,
+        endereco TEXT
+    )`);
+    db.run("ALTER TABLE clientes ADD COLUMN endereco TEXT", (err) => {});
 
-        // ... o resto das suas tabelas continuam iguais aqui para baixo ...
+    // Usuários
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        usuario TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        cargo TEXT DEFAULT 'Vendedor'
+    )`);
+    // Insere o Admin padrão se estiver vazio
+    db.get("SELECT COUNT(*) AS total FROM usuarios", [], (err, row) => {
+        if (!err && row.total === 0) {
+            db.run(`INSERT INTO usuarios (nome, usuario, senha, cargo) 
+                    VALUES ('Administrador', 'admin', '123456', 'Admin')`);
+        }
+    });
+
+    // Configurações da Empresa
+    db.run(`CREATE TABLE IF NOT EXISTS configuracoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        razao_social TEXT,
+        nome_fantasia TEXT DEFAULT 'Minha Loja',
+        documento TEXT,
+        inscricao_estadual TEXT,
+        telefone TEXT,
+        email TEXT,
+        cep TEXT,
+        endereco_completo TEXT,
+        logo TEXT
+    )`);
+    // Cria um registro vazio para edição
+    db.get("SELECT COUNT(*) AS total FROM configuracoes", [], (err, row) => {
+        if (!err && row.total === 0) {
+            db.run(`INSERT INTO configuracoes (nome_fantasia) VALUES ('Minha Loja')`);
+        }
+    }); 
 
     // ==========================================
-    // AS LINHAS DE RESET FICAM AQUI, SOLTAS NO JAVASCRIPT:
-    db.run("DROP TABLE IF EXISTS movimentacoes");
-    db.run("DROP TABLE IF EXISTS caixas");
+    // 2. TABELAS DE MOVIMENTAÇÃO (OPERACIONAL)
     // ==========================================
 
-    // Tabela Cabeçalho da Venda (O "Recibo")
+    // Vendas (Recibo)
     db.run(`CREATE TABLE IF NOT EXISTS vendas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_venda TEXT DEFAULT (datetime('now', 'localtime')),
@@ -47,7 +92,7 @@ db.run("PRAGMA foreign_keys = ON");
         FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL
     )`);
 
-    // NOVA TABELA: Itens da Venda (O que foi comprado)
+    // Itens da Venda
     db.run(`CREATE TABLE IF NOT EXISTS itens_venda (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         venda_id INTEGER NOT NULL,
@@ -58,7 +103,7 @@ db.run("PRAGMA foreign_keys = ON");
         FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT
     )`);
 
-    // TABELA: Controle de Caixa
+    // Controle de Caixa
     db.run(`CREATE TABLE IF NOT EXISTS caixas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_abertura TEXT DEFAULT (datetime('now', 'localtime')),
@@ -69,7 +114,7 @@ db.run("PRAGMA foreign_keys = ON");
         status TEXT DEFAULT 'ABERTO' 
     )`);
 
-    // TABELA: Fluxo de Caixa (Tudo que entra e sai)
+    // Movimentações do Caixa
     db.run(`CREATE TABLE IF NOT EXISTS movimentacoes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         caixa_id INTEGER,
@@ -83,60 +128,16 @@ db.run("PRAGMA foreign_keys = ON");
         FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE
     )`);
 
-    // ==========================================
-    // TABELA: Dados do Assinante (Minha Empresa)
-    // ==========================================
-    db.run("DROP TABLE IF EXISTS configuracoes"); // Pode remover depois do primeiro teste
-    
-    db.run(`CREATE TABLE IF NOT EXISTS configuracoes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        razao_social TEXT,
-        nome_fantasia TEXT DEFAULT 'Minha Loja',
-        documento TEXT,
-        inscricao_estadual TEXT,
-        telefone TEXT,
-        email TEXT,
-        cep TEXT,
-        endereco_completo TEXT,
-        logo TEXT
-    )`);
-
-    // Cria um registro vazio por padrão para o usuário poder editar depois
-    db.get("SELECT COUNT(*) AS total FROM configuracoes", [], (err, row) => {
-        if (!err && row.total === 0) {
-            db.run(`INSERT INTO configuracoes (nome_fantasia) VALUES ('Minha Loja')`);
-        }
-    }); 
-    // ==========================================
-    // TABELA: Contas a Pagar e Receber
-    // ==========================================
+    // Contas a Pagar e Receber
     db.run(`CREATE TABLE IF NOT EXISTS contas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tipo TEXT NOT NULL, -- 'PAGAR' ou 'RECEBER'
+        tipo TEXT NOT NULL,
         descricao TEXT NOT NULL,
         valor REAL NOT NULL,
         data_vencimento TEXT NOT NULL,
         data_pagamento TEXT,
-        status TEXT DEFAULT 'PENDENTE' -- 'PENDENTE' ou 'PAGO'
+        status TEXT DEFAULT 'PENDENTE'
     )`);
-    // ==========================================
-    // TABELA: Usuários do Sistema
-    // ==========================================
-    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        usuario TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL,
-        cargo TEXT DEFAULT 'Vendedor'
-    )`);
-
-    // Insere o usuário Administrador padrão se a tabela estiver vazia
-    db.get("SELECT COUNT(*) AS total FROM usuarios", [], (err, row) => {
-        if (!err && row.total === 0) {
-            db.run(`INSERT INTO usuarios (nome, usuario, senha, cargo) 
-                    VALUES ('Administrador', 'admin', '123456', 'Admin')`);
-        }
-    });   
 });
 
 // Exporta o banco para ser usado nos controllers

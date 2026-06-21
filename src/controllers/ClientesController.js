@@ -14,10 +14,10 @@ module.exports = function iniciarRotasClientes() {
     });
 
     // CRIAR
-    ipcMain.handle('salvar-cliente', async (event, cliente) => {
+    ipcMain.handle('salvar-cliente', async (event, cli) => {
         return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO clientes (nome, documento, telefone, email) VALUES (?, ?, ?, ?)`,
-                [cliente.nome, cliente.documento, cliente.telefone, cliente.email],
+            db.run(`INSERT INTO clientes (nome, documento, telefone, email, endereco) VALUES (?, ?, ?, ?, ?)`,
+                [cli.nome, cli.documento, cli.telefone, cli.email, cli.endereco],
                 function(err) {
                     if (err) reject(err.message);
                     else resolve(this.lastID);
@@ -27,10 +27,10 @@ module.exports = function iniciarRotasClientes() {
     });
 
     // EDITAR
-    ipcMain.handle('atualizar-cliente', async (event, cliente) => {
+    ipcMain.handle('atualizar-cliente', async (event, cli) => {
         return new Promise((resolve, reject) => {
-            db.run(`UPDATE clientes SET nome = ?, documento = ?, telefone = ?, email = ? WHERE id = ?`,
-                [cliente.nome, cliente.documento, cliente.telefone, cliente.email, cliente.id],
+            db.run(`UPDATE clientes SET nome = ?, documento = ?, telefone = ?, email = ?, endereco = ? WHERE id = ?`,
+                [cli.nome, cli.documento, cli.telefone, cli.email, cli.endereco, cli.id],
                 function(err) {
                     if (err) reject(err.message);
                     else resolve(true);
