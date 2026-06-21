@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.pravatar.cc; connect-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net;">
+    <title>Koda ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        koda: { sidebar: '#2A364A', primary: '#4B7BEC', bg: '#F4F7FE' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-koda-bg font-sans text-slate-700 h-screen flex overflow-hidden">
+
+    <div id="modal-produto" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <h2 id="titulo-modal-produto" class="text-lg font-bold text-slate-800">Novo Produto</h2>
+                <button onclick="fecharModalProduto()" class="text-slate-400 hover:text-red-500 transition text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="produto-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Nome do Produto <span class="text-red-500">*</span></label>
+                    <input type="text" id="produto-nome" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Un. de Medida</label>
+                        <select id="produto-medida" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            <option value="UN">Unidade (UN)</option>
+                            <option value="KG">Quilo (KG)</option>
+                            <option value="CX">Caixa (CX)</option>
+                            <option value="LT">Litro (LT)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Quantidade</label>
+                        <input type="number" id="produto-quantidade" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Preço de Custo</label>
+                        <input type="number" id="produto-custo" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Preço de Venda <span class="text-red-500">*</span></label>
+                        <input type="number" id="produto-venda" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end space-x-3">
+                <button onclick="fecharModalProduto()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                <button onclick="salvarProduto()" class="px-6 py-2 text-sm font-medium bg-koda-primary hover:bg-blue-600 text-white rounded-lg shadow-md transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="w-64 bg-koda-sidebar text-slate-300 flex flex-col shadow-xl z-10">
+        <div class="h-20 flex items-center px-8 mb-4">
+            <div class="text-white text-3xl font-bold tracking-tight flex items-center">
+                <svg class="w-6 h-6 mr-0.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M4 2v20h4v-8l6 8h5l-7-9.5L18 2h-4.5l-5.5 7.5V2H4z"/>
+                    <polygon points="12,2 20,2 20,8" fill="currentColor"/>
+                </svg>
+                oda
+            </div>
+        </div>
+
+        <nav id="menu-lateral" class="flex-1 px-4 space-y-2">
+            <a href="#" onclick="navegarPara('tela-dashboard', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-koda-primary text-white shadow-md transition">
+                <span class="mr-3">📊</span> Dashboard
+            </a>
+            <a href="#" onclick="navegarPara('tela-vendas', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">🛒</span> Histórico de Vendas
+            </a>
+            <a href="#" onclick="navegarPara('tela-produtos', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">📦</span> Produtos
+            </a>
+            <a href="#" onclick="navegarPara('tela-clientes', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">👥</span> Clientes
+            </a>
+            <a href="#" onclick="navegarPara('tela-financeiro', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">💰</span> Financeiro e Caixa
+            </a>
+            <a href="#" onclick="navegarPara('tela-contas', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">📋</span> Contas Pagar / Receber
+            </a>
+            <a href="#" onclick="navegarPara('tela-configuracoes', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">⚙️</span> Dados da Empresa
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto relative">
+        
+        <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 shrink-0">
+            <div class="relative w-96">
+                <input type="text" placeholder="Buscar..." class="w-full bg-slate-100 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-koda-primary text-sm">
+                <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="text-slate-400 hover:text-koda-primary">🔔</button>
+                <div class="w-10 h-10 rounded-full bg-slate-300 border-2 border-white shadow-sm overflow-hidden">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="Usuário" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            
+            <section id="tela-dashboard" class="tela-sistema block">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Visão Geral de Vendas</h1>
+                    <button onclick="abrirModalNovaVenda()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                        + Nova Venda
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-r from-koda-primary to-blue-400 rounded-2xl p-6 shadow-lg text-white">
+                        <h3 class="text-blue-100 text-sm font-medium mb-2">Total Receita (Mês)</h3>
+                        <div class="flex items-end justify-between">
+                            <span id="valor-receita" class="text-3xl font-bold">Carregando...</span>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-slate-500 text-sm font-medium mb-2">Total Produtos</h3>
+                        <span id="valor-produtos" class="text-3xl font-bold text-slate-800">...</span>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-slate-500 text-sm font-medium mb-2">Total Clientes</h3>
+                        <span id="valor-clientes" class="text-3xl font-bold text-slate-800">...</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-4">Últimas Vendas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Cliente</th>
+                                    <th class="pb-3 font-medium">Valor</th>
+                                    <th class="pb-3 font-medium">Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-ultimas-vendas" class="text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <section id="tela-financeiro" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">Controle de Caixa</h1>
+                        <p id="status-caixa-texto" class="text-sm font-medium text-red-500 mt-1 flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> CAIXA FECHADO
+                        </p>
+                    </div>
+                    <div id="botoes-caixa" class="space-x-3">
+                        <button onclick="abrirModalAbrirCaixa()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                            🔓 Abrir Caixa
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-slate-500 text-sm font-medium mb-2">Fundo de Troco</h3>
+                        <span id="kpi-caixa-inicial" class="text-2xl font-bold text-slate-800">R$ 0,00</span>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-slate-500 text-sm font-medium mb-2">Entradas (Vendas)</h3>
+                        <span id="kpi-caixa-entradas" class="text-2xl font-bold text-green-500">R$ 0,00</span>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="text-slate-500 text-sm font-medium mb-2">Saídas (Despesas)</h3>
+                        <span id="kpi-caixa-saidas" class="text-2xl font-bold text-red-500">R$ 0,00</span>
+                    </div>
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-6 shadow-lg text-white">
+                        <h3 class="text-slate-300 text-sm font-medium mb-2">Saldo Esperado na Gaveta</h3>
+                        <span id="kpi-caixa-saldo" class="text-3xl font-bold text-white">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-4">Extrato do Turno Atual</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Horário</th>
+                                    <th class="pb-3 font-medium">Descrição</th>
+                                    <th class="pb-3 font-medium">Pagamento</th>
+                                    <th class="pb-3 font-medium text-right">Valor</th>
+                                    <th class="pb-3 font-medium text-center">Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-movimentacoes" class="text-sm">
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-slate-400">Abra o caixa para ver as movimentações.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <div id="modal-abrir-caixa" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+                <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between">
+                        <h2 class="text-lg font-bold text-slate-800">Abrir Caixa</h2>
+                        <button onclick="fecharModaisFinanceiro()" class="text-slate-400 hover:text-red-500">&times;</button>
+                    </div>
+                    <div class="p-6">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Valor do Troco (R$)</label>
+                        <input type="number" id="input-troco-inicial" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500">
+                        <p class="text-xs text-slate-400 mt-2">Informe quanto dinheiro em espécie há na gaveta neste momento.</p>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 border-t flex justify-end space-x-3">
+                        <button onclick="fecharModaisFinanceiro()" class="px-4 py-2 text-sm font-medium text-slate-600">Cancelar</button>
+                        <button onclick="confirmarAberturaCaixa()" class="px-6 py-2 text-sm font-medium bg-green-500 text-white rounded-lg">Confirmar Abertura</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-fechar-caixa" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+                <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100">
+                        <h2 class="text-lg font-bold text-slate-800">Fechar Caixa</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="bg-slate-100 p-4 rounded-lg text-center">
+                            <p class="text-sm text-slate-500">O sistema calculou que você deve ter:</p>
+                            <p id="fechamento-saldo-esperado" class="text-2xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Total contado na gaveta (R$)</label>
+                            <input type="number" id="input-valor-informado" step="0.01" class="w-full bg-white border border-red-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 border-t flex justify-end space-x-3">
+                        <button onclick="fecharModaisFinanceiro()" class="px-4 py-2 text-sm font-medium text-slate-600">Cancelar</button>
+                        <button onclick="confirmarFechamentoCaixa()" class="px-6 py-2 text-sm font-medium bg-red-500 text-white rounded-lg">Encerrar Turno</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-movimentacao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+                <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100">
+                        <h2 class="text-lg font-bold text-slate-800">Nova Movimentação</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Tipo</label>
+                                <select id="mov-tipo" class="w-full bg-slate-50 border rounded-lg px-3 py-2 outline-none">
+                                    <option value="SAIDA">Saída (Despesa/Sangria)</option>
+                                    <option value="ENTRADA">Entrada (Reforço)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Valor (R$)</label>
+                                <input type="number" id="mov-valor" step="0.01" class="w-full bg-slate-50 border rounded-lg px-3 py-2 outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Motivo / Descrição</label>
+                            <input type="text" id="mov-descricao" placeholder="Ex: Pagamento de água, Retirada p/ banco..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Formato</label>
+                            <select id="mov-pagamento" class="w-full bg-slate-50 border rounded-lg px-3 py-2 outline-none">
+                                <option value="Dinheiro">Dinheiro da Gaveta</option>
+                                <option value="Banco">Transferência/Banco</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 border-t flex justify-end space-x-3">
+                        <button onclick="fecharModaisFinanceiro()" class="px-4 py-2 text-sm font-medium text-slate-600">Cancelar</button>
+                        <button onclick="confirmarMovimentacao()" class="px-6 py-2 text-sm font-medium bg-koda-primary text-white rounded-lg">Salvar</button>
+                    </div>
+                </div>
+            </div>
+
+            <section id="tela-contas" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">Contas a Pagar e Receber</h1>
+                        <p class="text-sm text-slate-500 mt-1">Gerencie os compromissos financeiros futuros da empresa.</p>
+                    </div>
+                    <button onclick="abrirModalNovaConta()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                        + Nova Conta Lançar
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Tipo</th>
+                                    <th class="pb-3 font-medium">Descrição</th>
+                                    <th class="pb-3 font-medium">Vencimento</th>
+                                    <th class="pb-3 font-medium text-right">Valor</th>
+                                    <th class="pb-3 font-medium text-center">Status</th>
+                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-contas-lista" class="text-sm">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <div id="modal-conta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+                <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between">
+                        <h2 class="text-lg font-bold text-slate-800">Lançar Nova Conta</h2>
+                        <button onclick="fecharModalConta()" class="text-slate-400 hover:text-red-500 text-2xl font-bold">&times;</button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Tipo de Conta</label>
+                            <select id="conta-tipo" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                                <option value="PAGAR">🔴 Conta a Pagar (Despesa/Fornecedor)</option>
+                                <option value="RECEBER">🟢 Conta a Receber (Entrada/Cliente)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Descrição / Motivo</label>
+                            <input type="text" id="conta-descricao" placeholder="Ex: Conta de Luz, Parcelamento cliente X..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Valor (R$)</label>
+                                <input type="number" id="conta-valor" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Data de Vencimento</label>
+                                <input type="date" id="conta-vencimento" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 border-t flex justify-end space-x-3">
+                        <button onclick="fecharModalConta()" class="px-4 py-2 text-sm font-medium text-slate-600">Cancelar</button>
+                        <button onclick="salvarConta()" class="px-6 py-2 text-sm font-medium bg-koda-primary text-white rounded-lg shadow-md">Lançar Conta</button>
+                    </div>
+                </div>
+            </div>
+
+            <section id="tela-vendas" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Histórico de Vendas</h1>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Nº Venda</th>
+                                    <th class="pb-3 font-medium">Data e Hora</th>
+                                    <th class="pb-3 font-medium">Cliente</th>
+                                    <th class="pb-3 font-medium text-right">Valor Total</th>
+                                    <th class="pb-3 font-medium text-center">Pagamento</th>
+                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-historico-vendas" class="text-sm">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tela-produtos" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Produtos</h1>
+                    <button onclick="abrirModalProduto()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                        + Novo Produto
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Produto</th>
+                                    <th class="pb-3 font-medium text-center">Unidade</th>
+                                    <th class="pb-3 font-medium text-center">Estoque</th>
+                                    <th class="pb-3 font-medium text-right">Custo</th>
+                                    <th class="pb-3 font-medium text-right">Venda</th>
+                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-produtos-lista" class="text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tela-clientes" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Clientes</h1>
+                    <button onclick="abrirModalCliente()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                        + Novo Cliente
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Nome</th>
+                                    <th class="pb-3 font-medium">Documento</th>
+                                    <th class="pb-3 font-medium">Telefone</th>
+                                    <th class="pb-3 font-medium">E-mail</th>
+                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-clientes-lista" class="text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div> 
+        <section id="tela-configuracoes" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Dados do Assinante</h1>
+                    <button onclick="salvarDadosAssinante()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
+                        💾 Salvar Alterações
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <div class="md:col-span-1 flex flex-col items-center space-y-4 border-r border-slate-100 pr-8">
+                        <div class="w-48 h-48 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden relative group cursor-pointer" onclick="document.getElementById('input-logo').click()">
+                            <img id="preview-logo" src="" alt="Logo" class="w-full h-full object-contain hidden">
+                            <div id="placeholder-logo" class="text-center text-slate-400">
+                                <span class="text-3xl block mb-2">📸</span>
+                                <span class="text-sm">Clique para enviar a Logo</span>
+                            </div>
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-sm font-medium transition">
+                                Alterar Imagem
+                            </div>
+                        </div>
+                        <input type="file" id="input-logo" accept="image/*" class="hidden" onchange="carregarPreviaLogo(event)">
+                        <p class="text-xs text-slate-400 text-center">Use imagens PNG ou JPG quadradas para melhor resultado no recibo.</p>
+                    </div>
+
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Razão Social</label>
+                                <input type="text" id="config-razao" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Nome Fantasia</label>
+                                <input type="text" id="config-fantasia" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">CNPJ / CPF</label>
+                                <input type="text" id="config-doc" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Inscrição Estadual (IE)</label>
+                                <input type="text" id="config-ie" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Telefone / WhatsApp</label>
+                                <input type="text" id="config-tel" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">E-mail de Contato</label>
+                                <input type="email" id="config-email" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="col-span-1">
+                                <label class="block text-sm font-medium text-slate-600 mb-1">CEP</label>
+                                <input type="text" id="config-cep" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Endereço Completo</label>
+                                <input type="text" id="config-endereco" placeholder="Ex: Rua das Flores, 123 - Centro, São Paulo/SP" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        <div id="modal-venda" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                        <span class="mr-2">🛒</span> Ponto de Venda (PDV)
+                    </h2>
+                    <button onclick="fecharModal()" class="text-slate-400 hover:text-red-500 transition text-2xl font-bold">&times;</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Cliente</label>
+                            <select id="select-cliente" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none">
+                                <option value="">Selecione um cliente...</option>
+                            </select>
+                        </div>
+                        <hr class="border-slate-100">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Produto</label>
+                            <select id="select-produto" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none">
+                                <option value="">Selecione um produto...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Quantidade</label>
+                            <input type="number" id="input-quantidade" value="1" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none">
+                        </div>
+                        <button onclick="adicionarAoCarrinho()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-lg transition text-sm">
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-2 flex flex-col">
+                        <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col min-h-[300px]">
+                            <div class="overflow-y-auto flex-1 p-0">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-100 sticky top-0">
+                                        <tr class="text-slate-500 text-xs uppercase tracking-wider">
+                                            <th class="px-4 py-3 font-medium">Produto</th>
+                                            <th class="px-4 py-3 font-medium text-center">Qtd</th>
+                                            <th class="px-4 py-3 font-medium text-right">Unitário</th>
+                                            <th class="px-4 py-3 font-medium text-right">Subtotal</th>
+                                            <th class="px-4 py-3 text-center">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-carrinho" class="text-sm divide-y divide-slate-100 bg-white">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex items-end justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="w-1/3">
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Pagamento</label>
+                                <select id="select-pagamento" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none">
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="PIX">PIX</option>
+                                    <option value="Cartão">Cartão (Débito/Crédito)</option>
+                                    <option value="A Prazo">A Prazo (Fiado/Faturado)</option>
+                                </select>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-slate-500 text-sm font-medium mb-1">Total da Venda</p>
+                                <p id="total-carrinho" class="text-3xl font-bold text-koda-primary">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end space-x-3">
+                    <button onclick="fecharModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                    <button onclick="finalizarVenda()" class="px-6 py-2 text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition transform hover:scale-105">
+                        Concluir Venda
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-cliente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h2 id="titulo-modal-cliente" class="text-lg font-bold text-slate-800">Novo Cliente</h2>
+                    <button onclick="fecharModalCliente()" class="text-slate-400 hover:text-red-500 transition text-2xl font-bold">&times;</button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="cliente-id">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Nome Completo <span class="text-red-500">*</span></label>
+                        <input type="text" id="cliente-nome" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">CPF/CNPJ</label>
+                        <input type="text" id="cliente-documento" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Telefone</label>
+                        <input type="text" id="cliente-telefone" placeholder="(00) 00000-0000" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">E-mail</label>
+                        <input type="email" id="cliente-email" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end space-x-3">
+                    <button onclick="fecharModalCliente()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                    <button onclick="salvarCliente()" class="px-6 py-2 text-sm font-medium bg-koda-primary hover:bg-blue-600 text-white rounded-lg shadow-md transition">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. UTILIDADES
+        const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+
+        // 2. NAVEGAÇÃO SPA
+        function navegarPara(idTela, elementoClicado) {
+            document.querySelectorAll('.tela-sistema').forEach(tela => {
+                tela.classList.add('hidden');
+                tela.classList.remove('block');
+            });
+
+            const telaAtiva = document.getElementById(idTela);
+            if (telaAtiva) {
+                telaAtiva.classList.remove('hidden');
+                telaAtiva.classList.add('block');
+            }
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('bg-koda-primary', 'text-white', 'shadow-md');
+                item.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+            });
+
+            if (elementoClicado) {
+                elementoClicado.classList.remove('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+                elementoClicado.classList.add('bg-koda-primary', 'text-white', 'shadow-md');
+            }
+        }
+
+        // 3. DASHBOARD
+        async function carregarDashboard() {
+            try {
+                const dados = await window.api.invoke('buscar-resumo-dashboard');
+                
+                document.getElementById('valor-clientes').innerText = dados.totalClientes;
+                document.getElementById('valor-produtos').innerText = dados.totalProdutos;
+                document.getElementById('valor-receita').innerText = formatarMoeda(dados.receitaTotal);
+
+                const tbody = document.getElementById('tabela-ultimas-vendas');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-500">Funcionalidade em desenvolvimento...</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error("Erro ao carregar dashboard:", error);
+                document.getElementById('valor-clientes').innerText = "Erro";
+                document.getElementById('valor-produtos').innerText = "Erro";
+                document.getElementById('valor-receita').innerText = "Erro";
+            }
+        }
+
+        // 4. CARRINHO (PDV)
+        let carrinho = [];
+        let produtosCadastrados = [];
+
+        async function abrirModalNovaVenda() {
+            document.getElementById('modal-venda').classList.remove('hidden');
+            carrinho = [];
+            atualizarTabelaCarrinho();
+
+            try {
+                const { produtos, clientes } = await window.api.invoke('buscar-dados-venda');
+                produtosCadastrados = produtos;
+
+                const selectCliente = document.getElementById('select-cliente');
+                selectCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
+                clientes.forEach(c => selectCliente.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+
+                const selectProduto = document.getElementById('select-produto');
+                selectProduto.innerHTML = '<option value="">Selecione um produto...</option>';
+                produtos.forEach(p => selectProduto.innerHTML += `<option value="${p.id}">${p.nome} (Est. ${p.quantidade})</option>`);
+            } catch (erro) {
+                console.error(erro);
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-venda').classList.add('hidden');
+        }
+
+        function adicionarAoCarrinho() {
+            const produtoId = document.getElementById('select-produto').value;
+            const quantidade = parseFloat(document.getElementById('input-quantidade').value);
+
+            if (!produtoId || quantidade <= 0) return alert("Selecione um produto e quantidade.");
+
+            const produtoDb = produtosCadastrados.find(p => p.id == produtoId);
+            if (quantidade > produtoDb.quantidade) return alert("Estoque insuficiente!");
+
+            const itemExistente = carrinho.find(item => item.produto_id == produtoId);
+            if (itemExistente) itemExistente.quantidade += quantidade;
+            else carrinho.push({ produto_id: produtoDb.id, nome: produtoDb.nome, quantidade, preco_unitario: produtoDb.venda });
+
+            document.getElementById('input-quantidade').value = 1;
+            document.getElementById('select-produto').value = "";
+            atualizarTabelaCarrinho();
+        }
+
+        function removerDoCarrinho(index) {
+            carrinho.splice(index, 1);
+            atualizarTabelaCarrinho();
+        }
+
+        function atualizarTabelaCarrinho() {
+            const tbody = document.getElementById('tabela-carrinho');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            carrinho.forEach((item, index) => {
+                const subtotal = item.quantidade * item.preco_unitario;
+                total += subtotal;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 text-slate-700">${item.nome}</td>
+                        <td class="px-4 py-3 text-center text-slate-600">${item.quantidade}</td>
+                        <td class="px-4 py-3 text-right text-slate-600">${formatarMoeda(item.preco_unitario)}</td>
+                        <td class="px-4 py-3 text-right font-medium text-slate-800">${formatarMoeda(subtotal)}</td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-600">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('total-carrinho').innerText = formatarMoeda(total);
+        }
+
+        async function finalizarVenda() {
+            if (carrinho.length === 0) return alert("Carrinho vazio!");
+
+            const payloadVenda = {
+                cliente_id: document.getElementById('select-cliente').value || null,
+                total: carrinho.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario), 0),
+                forma_pagamento: document.getElementById('select-pagamento').value,
+                itens: carrinho.map(item => ({ produto_id: item.produto_id, quantidade: item.quantidade, preco_unitario: item.preco_unitario }))
+            };
+
+            try {
+                const resultado = await window.api.invoke('salvar-venda-completa', payloadVenda);
+                
+                if (resultado.sucesso) {
+                    alert(`✅ Venda concluída!`);
+                    fecharModal();
+                    
+                    // ==========================================
+                    // IMPRESSÃO DO RECIBO
+                    // ==========================================
+                    if (confirm("Deseja imprimir o cupom da venda?")) {
+                        const dadosRecibo = {
+                            vendaId: resultado.vendaId,
+                            total: payloadVenda.total,
+                            forma_pagamento: payloadVenda.forma_pagamento,
+                            itens: carrinho
+                        };
+                        await window.api.invoke('imprimir-recibo', dadosRecibo);
+                    }
+
+                    // Atualiza a tela
+                    carregarDashboard();
+                    carregarFinanceiro();
+                    carregarVendas();
+                    carregarProdutos();
+                }
+            } catch (erro) {
+                // CORREÇÃO: O bloco catch agora trata os erros corretamente!
+                if (erro.message && erro.message.includes("CAIXA_FECHADO")) {
+                    alert("Atenção: Você precisa abrir o caixa antes de realizar uma venda!");
+                } else {
+                    alert("Erro ao salvar a venda.");
+                }
+            }
+        } 
+        
+        // ==========================================
+        // 5. MÓDULO DE PRODUTOS (ADICIONADO)
+        // ==========================================
+        let listaProdutosCache = []; 
+
+        async function carregarProdutos() {
+            try {
+                const produtos = await window.api.invoke('buscar-produtos');
+                listaProdutosCache = produtos;
+                
+                const tbody = document.getElementById('tabela-produtos-lista');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                
+                produtos.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                            <td class="py-4 font-medium text-slate-700">${p.nome}</td>
+                            <td class="py-4 text-center text-slate-600">${p.medida || 'UN'}</td>
+                            <td class="py-4 text-center text-slate-600">${p.quantidade || 0}</td>
+                            <td class="py-4 text-right text-slate-600">${formatarMoeda(p.custo || 0)}</td>
+                            <td class="py-4 text-right text-slate-600">${formatarMoeda(p.venda || 0)}</td>
+                            <td class="py-4 text-center">
+                                <button onclick="editarProduto(${p.id})" class="text-blue-400 hover:text-blue-600 mr-3" title="Editar">✏️</button>
+                                <button onclick="excluirProduto(${p.id})" class="text-red-400 hover:text-red-600" title="Excluir">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar produtos:", erro);
+            }
+        }
+
+        function abrirModalProduto(modoEdicao = false) {
+            document.getElementById('modal-produto').classList.remove('hidden');
+            if (!modoEdicao) {
+                document.getElementById('titulo-modal-produto').innerText = 'Novo Produto';
+                document.getElementById('produto-id').value = '';
+                document.getElementById('produto-nome').value = '';
+                document.getElementById('produto-medida').value = 'UN';
+                document.getElementById('produto-quantidade').value = '0';
+                document.getElementById('produto-custo').value = '0';
+                document.getElementById('produto-venda').value = '0';
+            }
+        }
+
+        function fecharModalProduto() {
+            document.getElementById('modal-produto').classList.add('hidden');
+        }
+
+        async function salvarProduto() {
+            const id = document.getElementById('produto-id').value;
+            const produto = {
+                id: id || null,
+                nome: document.getElementById('produto-nome').value,
+                medida: document.getElementById('produto-medida').value,
+                quantidade: parseFloat(document.getElementById('produto-quantidade').value),
+                custo: parseFloat(document.getElementById('produto-custo').value),
+                venda: parseFloat(document.getElementById('produto-venda').value)
+            };
+
+            if (!produto.nome) return alert("O nome do produto é obrigatório!");
+
+            try {
+                if (id) {
+                    await window.api.invoke('atualizar-produto', produto);
+                } else {
+                    await window.api.invoke('salvar-produto', produto);
+                }
+                fecharModalProduto();
+                carregarProdutos(); 
+                carregarDashboard();
+            } catch (erro) {
+                alert("Erro ao salvar produto.");
+            }
+        }
+
+        function editarProduto(id) {
+            const produto = listaProdutosCache.find(p => p.id === id);
+            if (produto) {
+                document.getElementById('titulo-modal-produto').innerText = 'Editar Produto';
+                document.getElementById('produto-id').value = produto.id;
+                document.getElementById('produto-nome').value = produto.nome;
+                document.getElementById('produto-medida').value = produto.medida;
+                document.getElementById('produto-quantidade').value = produto.quantidade;
+                document.getElementById('produto-custo').value = produto.custo;
+                document.getElementById('produto-venda').value = produto.venda;
+                abrirModalProduto(true); 
+            }
+        }
+
+        async function excluirProduto(id) {
+            if (confirm("Tem certeza que deseja excluir este produto?")) {
+                try {
+                    await window.api.invoke('excluir-produto', id);
+                    carregarProdutos();
+                    carregarDashboard();
+                } catch (erro) {
+                    alert("Erro ao excluir produto.");
+                }
+            }
+        }
+
+        // ==========================================
+        // 9. MÓDULO FINANCEIRO E CAIXA
+        // ==========================================
+let caixaAbertoId = null;
+let saldoEsperadoSistema = 0;
+
+async function carregarFinanceiro() {
+    try {
+        // 1. Verifica se tem caixa aberto
+        const caixa = await window.api.invoke('verificar-caixa-aberto');
+        
+        const areaBotoes = document.getElementById('botoes-caixa');
+        const statusTexto = document.getElementById('status-caixa-texto');
+        
+        if (!caixa) {
+            caixaAbertoId = null;
+            statusTexto.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> CAIXA FECHADO`;
+            statusTexto.className = "text-sm font-medium text-red-500 mt-1 flex items-center";
+            areaBotoes.innerHTML = `
+                <button onclick="abrirModalAbrirCaixa()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition">🔓 Abrir Caixa</button>
+            `;
+            // Zera KPIs visuais
+            document.getElementById('kpi-caixa-inicial').innerText = formatarMoeda(0);
+            document.getElementById('kpi-caixa-entradas').innerText = formatarMoeda(0);
+            document.getElementById('kpi-caixa-saidas').innerText = formatarMoeda(0);
+            document.getElementById('kpi-caixa-saldo').innerText = formatarMoeda(0);
+            document.getElementById('tabela-movimentacoes').innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">Caixa fechado. Nenhuma movimentação ativa.</td></tr>`;
+            return;
+        }
+
+        // 2. Se estiver aberto, busca o resumo completo
+        caixaAbertoId = caixa.id;
+        statusTexto.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span> CAIXA ABERTO (Turno #${caixa.id})`;
+        statusTexto.className = "text-sm font-medium text-green-600 mt-1 flex items-center";
+        
+        areaBotoes.innerHTML = `
+            <button onclick="abrirModalMovimentacao()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">💸 Nova Movimentação</button>
+            <button onclick="abrirModalFecharCaixa()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition">🔒 Fechar Caixa</button>
+        `;
+
+        const resumo = await window.api.invoke('resumo-caixa', caixa.id);
+        
+        // Atualiza KPIs
+        document.getElementById('kpi-caixa-inicial').innerText = formatarMoeda(resumo.caixa.valor_inicial);
+        document.getElementById('kpi-caixa-entradas').innerText = formatarMoeda(resumo.totais.entradas);
+        document.getElementById('kpi-caixa-saidas').innerText = formatarMoeda(resumo.totais.saidas);
+        
+        saldoEsperadoSistema = resumo.totais.saldoAtual;
+        document.getElementById('kpi-caixa-saldo').innerText = formatarMoeda(saldoEsperadoSistema);
+
+        // Preenche Tabela
+        const tbody = document.getElementById('tabela-movimentacoes');
+        tbody.innerHTML = '';
+        if (resumo.movimentacoes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Nenhuma venda ou movimentação ainda.</td></tr>`;
+        } else {
+            resumo.movimentacoes.forEach(m => {
+                const isEntrada = m.tipo === 'ENTRADA';
+                // Formata hora (ex: 14:30) da string de data do banco
+                const hora = m.data ? new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-50 hover:bg-slate-50">
+                        <td class="py-3 text-slate-500">${hora}</td>
+                        <td class="py-3 font-medium text-slate-700">${m.descricao}</td>
+                        <td class="py-3 text-slate-500">${m.forma_pagamento || '-'}</td>
+                        <td class="py-3 text-right font-medium ${isEntrada ? 'text-green-600' : 'text-red-500'}">
+                            ${isEntrada ? '+' : '-'} ${formatarMoeda(m.valor)}
+                        </td>
+                        <td class="py-3 text-center">
+                            <span class="px-2 py-1 text-xs rounded-md ${isEntrada ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${m.tipo}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    } catch (e) { console.error("Erro ao carregar módulo financeiro:", e); }
+}
+
+// Funções de Controle dos Modais
+function fecharModaisFinanceiro() {
+    document.getElementById('modal-abrir-caixa').classList.add('hidden');
+    document.getElementById('modal-fechar-caixa').classList.add('hidden');
+    document.getElementById('modal-movimentacao').classList.add('hidden');
+}
+
+function abrirModalAbrirCaixa() {
+    document.getElementById('input-troco-inicial').value = '0';
+    document.getElementById('modal-abrir-caixa').classList.remove('hidden');
+}
+
+async function confirmarAberturaCaixa() {
+    const valor = parseFloat(document.getElementById('input-troco-inicial').value);
+    if (isNaN(valor) || valor < 0) return alert("Informe um valor válido.");
+    
+    try {
+        await window.api.invoke('abrir-caixa', valor);
+        fecharModaisFinanceiro();
+        carregarFinanceiro(); // Atualiza a tela
+    } catch (e) { alert(e); }
+}
+
+function abrirModalMovimentacao() {
+    document.getElementById('mov-valor').value = '';
+    document.getElementById('mov-descricao').value = '';
+    document.getElementById('modal-movimentacao').classList.remove('hidden');
+}
+
+async function confirmarMovimentacao() {
+    const mov = {
+        caixa_id: caixaAbertoId,
+        tipo: document.getElementById('mov-tipo').value,
+        valor: parseFloat(document.getElementById('mov-valor').value),
+        descricao: document.getElementById('mov-descricao').value,
+        forma_pagamento: document.getElementById('mov-pagamento').value
+    };
+
+    if (!mov.descricao || isNaN(mov.valor) || mov.valor <= 0) return alert("Preencha descrição e um valor maior que zero.");
+
+    try {
+        await window.api.invoke('lancar-movimentacao', mov);
+        fecharModaisFinanceiro();
+        carregarFinanceiro();
+    } catch (e) { alert("Erro ao salvar movimentação."); }
+}
+
+function abrirModalFecharCaixa() {
+    document.getElementById('fechamento-saldo-esperado').innerText = formatarMoeda(saldoEsperadoSistema);
+    document.getElementById('input-valor-informado').value = '';
+    document.getElementById('modal-fechar-caixa').classList.remove('hidden');
+}
+
+async function confirmarFechamentoCaixa() {
+    const valorInformado = parseFloat(document.getElementById('input-valor-informado').value);
+    if (isNaN(valorInformado)) return alert("Você precisa informar o valor contado na gaveta.");
+
+    if (valorInformado !== saldoEsperadoSistema) {
+        const confirmar = confirm(`Atenção: Há uma diferença no caixa!\nSistema: ${formatarMoeda(saldoEsperadoSistema)}\nInformado: ${formatarMoeda(valorInformado)}\n\nDeseja fechar mesmo assim?`);
+        if (!confirmar) return;
+    }
+
+    try {
+        await window.api.invoke('fechar-caixa', {
+            caixa_id: caixaAbertoId,
+            valor_final_sistema: saldoEsperadoSistema,
+            valor_final_informado: valorInformado
+        });
+        fecharModaisFinanceiro();
+        carregarFinanceiro(); // Tela vai voltar para "Fechado"
+    } catch (e) { alert("Erro ao fechar caixa."); }
+}
+
+// ==========================================
+// MÓDULO DE HISTÓRICO DE VENDAS
+// ==========================================
+async function carregarVendas() {
+    try {
+        // Busca a rota que já existe no seu VendasController
+        const vendas = await window.api.invoke('buscar-vendas');
+        
+        const tbodyHistorico = document.getElementById('tabela-historico-vendas');
+        const tbodyDashboard = document.getElementById('tabela-ultimas-vendas'); // Aquela tabela do dashboard!
+        
+        tbodyHistorico.innerHTML = '';
+        if(tbodyDashboard) tbodyDashboard.innerHTML = '';
+
+        if (vendas.length === 0) {
+            tbodyHistorico.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Nenhuma venda registrada.</td></tr>';
+            if(tbodyDashboard) tbodyDashboard.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400">Nenhuma venda registrada.</td></tr>';
+            return;
+        }
+
+        vendas.forEach((v, index) => {
+            // Formata a data (Ex: 18/06/2026 14:30)
+            const dataObj = new Date(v.data_venda);
+            const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' às ' + dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            const nomeCliente = v.nome_cliente || 'Cliente Avulso (Balcão)';
+
+            // 1. Preenche a tabela grande da aba "Histórico"
+            tbodyHistorico.innerHTML += `
+                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                    <td class="py-4 font-medium text-slate-500">#${v.id}</td>
+                    <td class="py-4 text-slate-600">${dataFormatada}</td>
+                    <td class="py-4 text-slate-700">${nomeCliente}</td>
+                    <td class="py-4 text-right font-medium text-slate-800">${formatarMoeda(v.total)}</td>
+                    <td class="py-4 text-center text-slate-600">${v.forma_pagamento}</td>
+                    <td class="py-4 text-center">
+                        <button onclick="cancelarVenda(${v.id})" class="text-red-400 hover:text-red-600" title="Cancelar/Estornar Venda">❌</button>
+                    </td>
+                </tr>
+            `;
+
+            // 2. Preenche o Dashboard apenas com as 5 últimas vendas
+            if (tbodyDashboard && index < 5) {
+                tbodyDashboard.innerHTML += `
+                    <tr class="border-b border-slate-50 hover:bg-slate-50">
+                        <td class="py-3 text-slate-700">${nomeCliente}</td>
+                        <td class="py-3 font-medium text-slate-800">${formatarMoeda(v.total)}</td>
+                        <td class="py-3 text-slate-500 text-xs">${dataFormatada}</td>
+                    </tr>
+                `;
+            }
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar vendas:", erro);
+    }
+}
+async function cancelarVenda(id) {
+    if (confirm(`Atenção: Tem certeza que deseja cancelar a Venda #${id}?\n\nOs produtos voltarão para o estoque e o valor será abatido do caixa atual.`)) {
+        try {
+            await window.api.invoke('cancelar-venda', id);
+            alert("Venda cancelada com sucesso!");
+            
+            // Atualiza o sistema inteiro para refletir a mudança
+            carregarVendas();
+            carregarDashboard();
+            carregarFinanceiro();
+            carregarProdutos();
+        } catch (erro) {
+            if (erro.message.includes("CAIXA_FECHADO")) {
+                alert("Erro: Você precisa abrir o caixa do dia antes de estornar uma venda.");
+            } else {
+                alert("Erro ao cancelar a venda.");
+            }
+        }
+    }
+}
+
+        // ==========================================
+        // 6. MÓDULO DE CLIENTES
+        // ==========================================
+        let listaClientesCache = []; 
+
+        async function carregarClientes() {
+            try {
+                const clientes = await window.api.invoke('buscar-clientes');
+                listaClientesCache = clientes;
+                
+                const tbody = document.getElementById('tabela-clientes-lista');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                
+                clientes.forEach(c => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                            <td class="py-4 font-medium text-slate-700">${c.nome}</td>
+                            <td class="py-4 text-slate-600">${c.documento || '-'}</td>
+                            <td class="py-4 text-slate-600">${c.telefone || '-'}</td>
+                            <td class="py-4 text-slate-600">${c.email || '-'}</td>
+                            <td class="py-4 text-center">
+                                <button onclick="editarCliente(${c.id})" class="text-blue-400 hover:text-blue-600 mr-3" title="Editar">✏️</button>
+                                <button onclick="excluirCliente(${c.id})" class="text-red-400 hover:text-red-600" title="Excluir">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar clientes:", erro);
+            }
+        }
+
+        function abrirModalCliente(modoEdicao = false) {
+            document.getElementById('modal-cliente').classList.remove('hidden');
+            if (!modoEdicao) {
+                document.getElementById('titulo-modal-cliente').innerText = 'Novo Cliente';
+                document.getElementById('cliente-id').value = '';
+                document.getElementById('cliente-nome').value = '';
+                document.getElementById('cliente-documento').value = '';
+                document.getElementById('cliente-telefone').value = '';
+                document.getElementById('cliente-email').value = '';
+            }
+        }
+
+        function fecharModalCliente() {
+            document.getElementById('modal-cliente').classList.add('hidden');
+        }
+
+        async function salvarCliente() {
+            const id = document.getElementById('cliente-id').value;
+            const cliente = {
+                id: id || null,
+                nome: document.getElementById('cliente-nome').value,
+                documento: document.getElementById('cliente-documento').value,
+                telefone: document.getElementById('cliente-telefone').value,
+                email: document.getElementById('cliente-email').value
+            };
+
+            if (!cliente.nome) return alert("O nome do cliente é obrigatório!");
+
+            try {
+                if (id) {
+                    await window.api.invoke('atualizar-cliente', cliente);
+                } else {
+                    await window.api.invoke('salvar-cliente', cliente);
+                }
+                fecharModalCliente();
+                carregarClientes(); 
+                carregarDashboard(); 
+            } catch (erro) {
+                alert("Erro ao salvar cliente.");
+            }
+        }
+
+        function editarCliente(id) {
+            const cliente = listaClientesCache.find(c => c.id === id);
+            if (cliente) {
+                document.getElementById('titulo-modal-cliente').innerText = 'Editar Cliente';
+                document.getElementById('cliente-id').value = cliente.id;
+                document.getElementById('cliente-nome').value = cliente.nome;
+                document.getElementById('cliente-documento').value = cliente.documento;
+                document.getElementById('cliente-telefone').value = cliente.telefone;
+                document.getElementById('cliente-email').value = cliente.email;
+                abrirModalCliente(true); 
+            }
+        }
+
+        // <-- AQUI FOI CORRIGIDA E COMPLETADA A FUNÇÃO CORTADA
+        async function excluirCliente(id) {
+            if (confirm("Tem certeza que deseja excluir este cliente?")) {
+                try {
+                    await window.api.invoke('excluir-cliente', id);
+                    carregarClientes();
+                    carregarDashboard();
+                } catch (erro) {
+                    console.error("Erro ao excluir cliente:", erro);
+                    alert("Erro ao excluir cliente.");
+                }
+            }
+        }
+
+        // ==========================================
+        // MÓDULO DE ASSINANTE E CONFIGURAÇÕES
+        // ==========================================
+        let logoBase64Atual = "";
+
+        // Transforma a imagem selecionada em código Base64
+        function carregarPreviaLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    logoBase64Atual = reader.result; // Salva o texto Base64
+                    document.getElementById('preview-logo').src = logoBase64Atual;
+                    document.getElementById('preview-logo').classList.remove('hidden');
+                    document.getElementById('placeholder-logo').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function carregarDadosAssinante() {
+            try {
+                const config = await window.api.invoke('buscar-configuracoes');
+                if (config) {
+                    document.getElementById('config-razao').value = config.razao_social || '';
+                    document.getElementById('config-fantasia').value = config.nome_fantasia || '';
+                    document.getElementById('config-doc').value = config.documento || '';
+                    document.getElementById('config-ie').value = config.inscricao_estadual || '';
+                    document.getElementById('config-tel').value = config.telefone || '';
+                    document.getElementById('config-email').value = config.email || '';
+                    document.getElementById('config-cep').value = config.cep || '';
+                    document.getElementById('config-endereco').value = config.endereco_completo || '';
+                    
+                    if (config.logo) {
+                        logoBase64Atual = config.logo;
+                        document.getElementById('preview-logo').src = config.logo;
+                        document.getElementById('preview-logo').classList.remove('hidden');
+                        document.getElementById('placeholder-logo').classList.add('hidden');
+                    }
+                }
+            } catch (e) { console.error("Erro ao carregar assinante:", e); }
+        }
+
+        async function salvarDadosAssinante() {
+            const config = {
+                razao_social: document.getElementById('config-razao').value,
+                nome_fantasia: document.getElementById('config-fantasia').value,
+                documento: document.getElementById('config-doc').value,
+                inscricao_estadual: document.getElementById('config-ie').value,
+                telefone: document.getElementById('config-tel').value,
+                email: document.getElementById('config-email').value,
+                cep: document.getElementById('config-cep').value,
+                endereco_completo: document.getElementById('config-endereco').value,
+                logo: logoBase64Atual
+            };
+
+            try {
+                await window.api.invoke('salvar-configuracoes', config);
+                alert("Dados da empresa salvos com sucesso!");
+            } catch (e) {
+                alert("Erro ao salvar dados.");
+            }
+        }
+
+        // ==========================================
+        // MÓDULO: CONTAS A PAGAR E RECEBER
+        // ==========================================
+        async function carregarContas() {
+            try {
+                const contas = await window.api.invoke('buscar-contas');
+                const tbody = document.getElementById('tabela-contas-lista');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                if (contas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400">Nenhuma conta agendada.</td></tr>';
+                    return;
+                }
+
+                contas.forEach(c => {
+                    const isPagar = c.tipo === 'PAGAR';
+                    const isPado = c.status === 'PAGO';
+                    
+                    // Formata a data americana (aaaa-mm-dd) para brasileira (dd/mm/aaaa)
+                    const dataFormatada = c.data_vencimento.split('-').reverse().join('/');
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                            <td class="py-4 font-bold ${isPagar ? 'text-red-500' : 'text-green-500'}">${c.tipo}</td>
+                            <td class="py-4 font-medium text-slate-700">${c.descricao}</td>
+                            <td class="py-4 text-slate-600">${dataFormatada}</td>
+                            <td class="py-4 text-right font-semibold text-slate-800">${formatarMoeda(c.valor)}</td>
+                            <td class="py-4 text-center">
+                                <span class="px-2 py-1 text-xs font-bold rounded-md ${isPado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${c.status}</span>
+                            </td>
+                            <td class="py-4 text-center space-x-2">
+                                ${isPado ? '<span class="text-slate-400 text-xs">Baixada</span>' : `
+                                    <button onclick="baixarConta(${c.id})" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded" title="Dar Baixa / Confirmar Pagamento">💸 Liquidar</button>
+                                    <button onclick="excluirConta(${c.id})" class="text-red-400 hover:text-red-600" title="Excluir Lançamento">🗑️</button>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function abrirModalNovaConta() {
+            document.getElementById('conta-descricao').value = '';
+            document.getElementById('conta-valor').value = '';
+            document.getElementById('conta-vencimento').value = '';
+            document.getElementById('modal-conta').classList.remove('hidden');
+        }
+
+        function fecharModalConta() {
+            document.getElementById('modal-conta').classList.add('hidden');
+        }
+
+        async function salvarConta() {
+            const conta = {
+                tipo: document.getElementById('conta-tipo').value,
+                descricao: document.getElementById('conta-descricao').value,
+                valor: parseFloat(document.getElementById('conta-valor').value),
+                data_vencimento: document.getElementById('conta-vencimento').value
+            };
+
+            if (!conta.descricao || isNaN(conta.valor) || !conta.data_vencimento) {
+                return alert("Por favor, preencha todos os campos do agendamento.");
+            }
+
+            try {
+                await window.api.invoke('salvar-conta', conta);
+                fecharModalConta();
+                carregarContas();
+            } catch (e) { alert("Erro ao agendar conta."); }
+        }
+
+        async function baixarConta(id) {
+            if (confirm("Confirmar a liquidação desta conta?\n\nIsso irá gerar uma movimentação imediata no seu caixa ativo.")) {
+                try {
+                    await window.api.invoke('baixar-conta', id);
+                    alert("Conta liquidada com sucesso!");
+                    carregarContas();
+                    carregarFinanceiro(); // Atualiza a aba do caixa
+                    carregarDashboard();  // Atualiza a receita do mês
+                } catch (erro) {
+                    if (erro.message.includes("CAIXA_FECHADO")) {
+                        alert("Erro: Você precisa abrir o caixa do dia antes de dar baixa em uma conta.");
+                    } else {
+                        alert(erro.message);
+                    }
+                }
+            }
+        }
+
+        async function excluirConta(id) {
+            if (confirm("Deseja deletar este agendamento?")) {
+                try {
+                    await window.api.invoke('excluir-conta', id);
+                    carregarContas();
+                } catch (e) { alert("Erro ao deletar."); }
+            }
+        }
+
+        // ==========================================
+        // 7. INICIALIZAÇÃO
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarDashboard();
+            carregarClientes();
+            carregarProdutos();
+            carregarFinanceiro();
+            carregarVendas();
+            carregarContas();
+            carregarDadosAssinante();
+        });
+    </script>
+</body>
+</html>

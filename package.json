@@ -1,0 +1,39 @@
+{
+  "name": "koda-erp",
+  "version": "1.0.0",
+  "description": "Meu sistema de ERP e PDV",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder -w",
+    "publish": "electron-builder -w -p always"
+  },
+  "build": {
+    "appId": "com.koda.erp",
+    "productName": "Koda ERP",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "SrSoares03",
+        "repo": "Koda-ERP"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.8",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}
