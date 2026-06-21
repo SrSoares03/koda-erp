@@ -13,6 +13,7 @@ const iniciarRotasDashboard = require('./src/controllers/DashboardController');
 const iniciarRotasFinanceiras = require('./src/controllers/FinanceiroController');
 const iniciarRotasConfiguracoes = require('./src/controllers/ConfiguracoesController'); 
 const iniciarRotasContas = require('./src/controllers/ContasController');
+const iniciarRotasUsuarios = require('./src/controllers/UsuariosController');
 
 // Escopo global para evitar travamentos
 let mainWindow;
@@ -43,7 +44,8 @@ app.whenReady().then(() => {
     iniciarRotasDashboard();
     iniciarRotasFinanceiras();
     iniciarRotasConfiguracoes();
-    iniciarRotasContas(); 
+    iniciarRotasContas();
+    iniciarRotasUsuarios(); 
 
     createWindow();
     // ==========================================

@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('api', {
             'buscar-contas',
             'salvar-conta',
             'baixar-conta',
+            'fazer-login',
             'excluir-conta'
         ];
 

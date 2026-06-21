@@ -112,6 +112,24 @@ db.serialize(() => {
         data_pagamento TEXT,
         status TEXT DEFAULT 'PENDENTE' -- 'PENDENTE' ou 'PAGO'
     )`);
+    // ==========================================
+    // TABELA: Usuários do Sistema
+    // ==========================================
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        usuario TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        cargo TEXT DEFAULT 'Vendedor'
+    )`);
+
+    // Insere o usuário Administrador padrão se a tabela estiver vazia
+    db.get("SELECT COUNT(*) AS total FROM usuarios", [], (err, row) => {
+        if (!err && row.total === 0) {
+            db.run(`INSERT INTO usuarios (nome, usuario, senha, cargo) 
+                    VALUES ('Administrador', 'admin', '123456', 'Admin')`);
+        }
+    });   
 });
 
 // Exporta o banco para ser usado nos controllers
