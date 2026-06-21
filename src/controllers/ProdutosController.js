@@ -3,7 +3,7 @@ const db = require('../database/connection');
 
 module.exports = function iniciarRotasProdutos() {
     
-    // LISTAR
+    // LISTAR TODOS
     ipcMain.handle('buscar-produtos', async () => {
         return new Promise((resolve, reject) => {
             db.all("SELECT * FROM produtos ORDER BY nome ASC", [], (err, linhas) => {
@@ -13,11 +13,21 @@ module.exports = function iniciarRotasProdutos() {
         });
     });
 
+    // BUSCAR POR CÓDIGO (Usado pelo Leitor de Código de Barras no PDV)
+    ipcMain.handle('buscar-produto-por-codigo', async (event, codigo) => {
+        return new Promise((resolve, reject) => {
+            db.get("SELECT * FROM produtos WHERE codigo_barras = ?", [codigo], (err, linha) => {
+                if (err) reject(err.message);
+                else resolve(linha); // Retorna o produto ou undefined se não achar
+            });
+        });
+    });
+
     // CRIAR
     ipcMain.handle('salvar-produto', async (event, prod) => {
         return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO produtos (nome, medida, custo, venda, quantidade) VALUES (?, ?, ?, ?, ?)`,
-                [prod.nome, prod.medida, prod.custo, prod.venda, prod.quantidade], 
+            db.run(`INSERT INTO produtos (nome, medida, custo, venda, quantidade, codigo_barras) VALUES (?, ?, ?, ?, ?, ?)`,
+                [prod.nome, prod.medida, prod.custo, prod.venda, prod.quantidade, prod.codigo_barras || null], 
                 function(err) {
                     if (err) reject(err.message);
                     else resolve(this.lastID); 
@@ -29,8 +39,8 @@ module.exports = function iniciarRotasProdutos() {
     // EDITAR
     ipcMain.handle('atualizar-produto', async (event, prod) => {
         return new Promise((resolve, reject) => {
-            db.run(`UPDATE produtos SET nome = ?, medida = ?, custo = ?, venda = ?, quantidade = ? WHERE id = ?`,
-                [prod.nome, prod.medida, prod.custo, prod.venda, prod.quantidade, prod.id],
+            db.run(`UPDATE produtos SET nome = ?, medida = ?, custo = ?, venda = ?, quantidade = ?, codigo_barras = ? WHERE id = ?`,
+                [prod.nome, prod.medida, prod.custo, prod.venda, prod.quantidade, prod.codigo_barras || null, prod.id],
                 function(err) {
                     if (err) reject(err.message);
                     else resolve(true);

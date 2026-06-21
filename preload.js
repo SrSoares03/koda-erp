@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+    // 1. Função para INVOCAR o backend e esperar resposta
     invoke: (canal, dados) => {
         // LISTA BRANCA DEFINITIVA
         const canaisPermitidos = [
@@ -29,7 +30,9 @@ contextBridge.exposeInMainWorld('api', {
             'salvar-conta',
             'baixar-conta',
             'fazer-login',
-            'excluir-conta'
+            'excluir-conta',
+            'buscar-produto-por-codigo',
+            'instalar-atualizacao' // <-- Atualizador adicionado aqui!
         ];
 
         if (canaisPermitidos.includes(canal)) {
@@ -37,6 +40,14 @@ contextBridge.exposeInMainWorld('api', {
         } else {
             console.error(`Bloqueado: Tentativa de acesso a canal não autorizado (${canal})`);
             throw new Error('Acesso Negado');
+        }
+    },
+    
+    // 2. Função para ESCUTAR eventos que vêm do main.js sozinhos (ex: download pronto)
+    on: (channel, func) => {
+        let validChannels = ['atualizacao-baixada'];
+        if (validChannels.includes(channel)) {
+            ipcRenderer.on(channel, (event, ...args) => func(...args));
         }
     }
 });

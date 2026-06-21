@@ -13,16 +13,23 @@ const db = new sqlite3.Database(caminhoBanco, (err) => {
 db.run("PRAGMA foreign_keys = ON");
 
 // Criação das tabelas
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS produtos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT, medida TEXT, custo REAL, venda REAL, quantidade REAL
-    )`);
+    db.serialize(() => {
+        // TABELA: Produtos (Atualizada com Código de Barras)
+        db.run(`CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT, 
+            medida TEXT, 
+            custo REAL, 
+            venda REAL, 
+            quantidade REAL,
+            codigo_barras TEXT
+        )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS clientes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL, documento TEXT, telefone TEXT, email TEXT
-    )`);
+        // Truque de atualização: Tenta adicionar a coluna caso a tabela já exista
+        // (Ele vai dar um erro invisível no fundo se a coluna já existir, e tudo bem!)
+        db.run("ALTER TABLE produtos ADD COLUMN codigo_barras TEXT", (err) => {});
+
+        // ... o resto das suas tabelas continuam iguais aqui para baixo ...
 
     // ==========================================
     // AS LINHAS DE RESET FICAM AQUI, SOLTAS NO JAVASCRIPT:

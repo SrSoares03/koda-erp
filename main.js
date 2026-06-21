@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron'); // <-- ipcMain adicionado aqui!
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
@@ -48,34 +48,31 @@ app.whenReady().then(() => {
     iniciarRotasUsuarios(); 
 
     createWindow();
+
     // ==========================================
     // SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA
     // ==========================================
-    
-    // Procura por atualizações assim que o app abre
     autoUpdater.checkForUpdatesAndNotify();
 
-    // Avisa no console quando encontrar uma atualização
     autoUpdater.on('update-available', () => {
-        console.log('Atualização disponível! Baixando...');
+        console.log('Atualização encontrada! Baixando em segundo plano...');
     });
 
-    // Quando o download terminar, avisa o usuário para reiniciar
+    // 1. Quando o download terminar, em vez de abrir um alerta do Windows, envia um aviso para o HTML!
     autoUpdater.on('update-downloaded', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            title: 'Atualização Pronta',
-            message: 'Uma nova versão do Koda ERP foi baixada. O aplicativo será reiniciado para instalar a atualização.',
-            buttons: ['Reiniciar Agora']
-        }).then(() => {
-            autoUpdater.quitAndInstall(false, true);
-        });
+        // Pega a janela aberta do ERP e manda a mensagem 'atualizacao-baixada'
+        const janelas = BrowserWindow.getAllWindows();
+        if (janelas.length > 0) {
+            janelas[0].webContents.send('atualizacao-baixada');
+        }
     });
-    
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+
+    // 2. Rota que o botão "Reiniciar e Atualizar" do HTML vai chamar
+    ipcMain.handle('instalar-atualizacao', () => {
+        autoUpdater.quitAndInstall(false, true); // Fecha o sistema e aplica a atualização
     });
-});
+
+}); // <-- ESTA CHAVE E PARÊNTESE ESTAVAM FALTANDO!
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

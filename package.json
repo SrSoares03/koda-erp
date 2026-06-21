@@ -1,6 +1,6 @@
 {
   "name": "koda-erp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Meu sistema de ERP e PDV",
   "main": "main.js",
   "scripts": {

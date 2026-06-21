@@ -50,7 +50,7 @@
     <div id="modal-produto" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                <h2 id="titulo-modal-produto" class="text-lg font-bold text-slate-800">Novo Produto</h2>
+                <h2 id="titulo-modal-produto" class="text-lg font-bold text-slate-800">Cadastro de Estoque</h2>
                 <button onclick="fecharModalProduto()" class="text-slate-400 hover:text-red-500 transition text-2xl font-bold">&times;</button>
             </div>
             <div class="p-6 space-y-4">
@@ -58,6 +58,10 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1">Nome do Produto <span class="text-red-500">*</span></label>
                     <input type="text" id="produto-nome" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Código de Barras 🔍</label>
+                    <input type="text" id="produto-codigo" placeholder="Bipe o código aqui..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -70,24 +74,44 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Quantidade</label>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Qtd. no Estoque</label>
                         <input type="number" id="produto-quantidade" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Preço de Custo</label>
-                        <input type="number" id="produto-custo" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Preço de Venda <span class="text-red-500">*</span></label>
-                        <input type="number" id="produto-venda" value="0" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
                     </div>
                 </div>
             </div>
             <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end space-x-3">
                 <button onclick="fecharModalProduto()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
                 <button onclick="salvarProduto()" class="px-6 py-2 text-sm font-medium bg-koda-primary hover:bg-blue-600 text-white rounded-lg shadow-md transition">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-preco" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800">Alterar Preços</h2>
+                <button onclick="fecharModalPreco()" class="text-slate-400 hover:text-red-500 transition text-2xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="preco-id">
+                <div class="bg-slate-100 p-3 rounded-lg">
+                    <p class="text-xs text-slate-500">Produto selecionado:</p>
+                    <p id="preco-nome-produto" class="font-bold text-slate-800"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Custo (R$)</label>
+                        <input type="number" id="preco-custo" value="0" step="0.01" class="w-full bg-white border border-red-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500 text-red-600 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Venda (R$)</label>
+                        <input type="number" id="preco-venda" value="0" step="0.01" class="w-full bg-white border border-green-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500 text-green-600 font-bold">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end space-x-3">
+                <button onclick="fecharModalPreco()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                <button onclick="salvarPreco()" class="px-6 py-2 text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition">Atualizar Preços</button>
             </div>
         </div>
     </div>
@@ -223,20 +247,34 @@
                         </select>
                     </div>
                     <hr class="border-slate-100">
+                    
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                        <label class="block text-sm font-bold text-blue-800 mb-2">Bipar Produto 🔍</label>
+                        <input type="text" id="input-codigo-pdv" placeholder="Aguardando leitor..." onkeypress="biparProduto(event)" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono text-center tracking-widest text-slate-800 transition">
+                        <p class="text-xs text-blue-600 mt-2 text-center">Produto adicionado automaticamente (Qtd: 1)</p>
+                    </div>
+
+                    <div class="text-center text-xs text-slate-400 font-medium uppercase tracking-widest my-1">ou seleção manual</div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-slate-600 mb-1">Produto</label>
                         <select id="select-produto" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none">
                             <option value="">Selecione um produto...</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Quantidade</label>
-                        <input type="number" id="input-quantidade" value="1" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none">
+                    <div class="flex space-x-2">
+                        <div class="w-1/3">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Qtd.</label>
+                            <input type="number" id="input-quantidade" value="1" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-koda-primary outline-none text-center">
+                        </div>
+                        <div class="w-2/3 flex items-end">
+                            <button onclick="adicionarAoCarrinho()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-lg transition text-sm shadow-md">
+                                Adicionar
+                            </button>
+                        </div>
                     </div>
-                    <button onclick="adicionarAoCarrinho()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-lg transition text-sm">
-                        Adicionar ao Carrinho
-                    </button>
                 </div>
+
                 <div class="lg:col-span-2 flex flex-col">
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col min-h-[300px]">
                         <div class="overflow-y-auto flex-1 p-0">
@@ -333,7 +371,10 @@
                 <span class="mr-3">🛒</span> Histórico de Vendas
             </a>
             <a href="#" onclick="navegarPara('tela-produtos', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
-                <span class="mr-3">📦</span> Produtos
+                <span class="mr-3">📦</span> Estoque
+            </a>
+            <a href="#" onclick="navegarPara('tela-precos', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                <span class="mr-3">🏷️</span> Tabela de Preços
             </a>
             <a href="#" onclick="navegarPara('tela-clientes', this)" class="menu-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
                 <span class="mr-3">👥</span> Clientes
@@ -490,7 +531,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-contas-lista" class="text-sm">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -515,7 +556,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-historico-vendas" class="text-sm">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -540,26 +581,47 @@
 
             <section id="tela-produtos" class="tela-sistema hidden">
                 <div class="flex justify-between items-center mb-8">
-                    <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Produtos</h1>
+                    <h1 class="text-2xl font-bold text-slate-800">Controle de Estoque</h1>
                     <button onclick="abrirModalProduto()" class="bg-koda-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md transition transform hover:scale-105">
-                        + Novo Produto
+                        + Novo Item
                     </button>
                 </div>
-                
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 text-sm border-b border-slate-100">
+                                    <th class="pb-3 font-medium">Cód. Barras</th>
+                                    <th class="pb-3 font-medium">Produto</th>
+                                    <th class="pb-3 font-medium text-center">Unidade</th>
+                                    <th class="pb-3 font-medium text-center">Estoque Atual</th>
+                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-estoque-lista" class="text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tela-precos" class="tela-sistema hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-2xl font-bold text-slate-800">Tabela de Preços</h1>
+                </div>
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="text-slate-400 text-sm border-b border-slate-100">
                                     <th class="pb-3 font-medium">Produto</th>
-                                    <th class="pb-3 font-medium text-center">Unidade</th>
-                                    <th class="pb-3 font-medium text-center">Estoque</th>
-                                    <th class="pb-3 font-medium text-right">Custo</th>
-                                    <th class="pb-3 font-medium text-right">Venda</th>
-                                    <th class="pb-3 font-medium text-center">Ações</th>
+                                    <th class="pb-3 font-medium text-right">Preço de Custo</th>
+                                    <th class="pb-3 font-medium text-right">Preço de Venda</th>
+                                    <th class="pb-3 font-medium text-center">Margem</th>
+                                    <th class="pb-3 font-medium text-center">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-produtos-lista" class="text-sm">
+                            <tbody id="tabela-precos-lista" class="text-sm">
                             </tbody>
                         </table>
                     </div>
@@ -602,7 +664,6 @@
                 </div>
                 
                 <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-8">
-                    
                     <div class="md:col-span-1 flex flex-col items-center space-y-4 border-r border-slate-100 pr-8">
                         <div class="w-48 h-48 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden relative group cursor-pointer" onclick="document.getElementById('input-logo').click()">
                             <img id="preview-logo" src="" alt="Logo" class="w-full h-full object-contain hidden">
@@ -629,7 +690,6 @@
                                 <input type="text" id="config-fantasia" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">CNPJ / CPF</label>
@@ -640,7 +700,6 @@
                                 <input type="text" id="config-ie" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Telefone / WhatsApp</label>
@@ -651,7 +710,6 @@
                                 <input type="email" id="config-email" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-koda-primary">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-4 gap-4">
                             <div class="col-span-1">
                                 <label class="block text-sm font-medium text-slate-600 mb-1">CEP</label>
@@ -663,11 +721,24 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </section>
 
-        </div> </main>
+        </div> <div id="banner-atualizacao" class="hidden fixed bottom-6 right-6 bg-slate-800 text-white p-6 rounded-2xl shadow-2xl z-[200] max-w-sm border border-slate-700 transform transition-all translate-y-10 opacity-0">
+            <div class="flex items-start space-x-4">
+                <div class="text-3xl">🚀</div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg">Nova Atualização Pronta!</h3>
+                    <p class="text-sm text-slate-300 mt-1 mb-4">A versão mais recente do Koda ERP acabou de ser baixada. Deseja reiniciar e instalar agora?</p>
+                    <div class="flex space-x-3">
+                        <button onclick="ignorarAtualizacao()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition">Depois</button>
+                        <button onclick="instalarAtualizacao()" class="px-4 py-2 text-sm font-medium bg-koda-primary hover:bg-blue-600 text-white rounded-lg shadow-md transition">Reiniciar e Atualizar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <script>
         // 1. UTILIDADES
@@ -705,14 +776,10 @@
             try {
                 const dados = await window.api.invoke('buscar-resumo-dashboard');
                 
-                // Atualiza KPIs Superiores
                 document.getElementById('valor-clientes').innerText = dados.totalClientes;
                 document.getElementById('valor-produtos').innerText = dados.totalProdutos;
                 document.getElementById('valor-receita').innerText = formatarMoeda(dados.receitaTotal);
 
-                // ==========================================
-                // GRÁFICO 1: FATURAMENTO SEMANAL (BARRAS)
-                // ==========================================
                 const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
                 if (chartVendas) chartVendas.destroy(); 
                 
@@ -742,15 +809,11 @@
                     }
                 });
 
-                // ==========================================
-                // GRÁFICO 2: TOP PRODUTOS (ROSCA/DOUGHNUT)
-                // ==========================================
                 const ctxProdutos = document.getElementById('graficoProdutos').getContext('2d');
                 if (chartProdutos) chartProdutos.destroy();
 
                 const labelsProdutos = dados.produtosMaisVendidos.map(p => p.nome);
                 const valoresProdutos = dados.produtosMaisVendidos.map(p => p.total_vendido);
-
                 const hasData = valoresProdutos.length > 0;
 
                 chartProdutos = new Chart(ctxProdutos, {
@@ -770,10 +833,7 @@
                         plugins: { legend: { position: 'right' } }
                     }
                 });
-
-            } catch (error) {
-                console.error("Erro ao carregar dashboard:", error);
-            }
+            } catch (error) { console.error("Erro ao carregar dashboard:", error); }
         }
 
         // 4. CARRINHO (PDV)
@@ -796,13 +856,49 @@
                 const selectProduto = document.getElementById('select-produto');
                 selectProduto.innerHTML = '<option value="">Selecione um produto...</option>';
                 produtos.forEach(p => selectProduto.innerHTML += `<option value="${p.id}">${p.nome} (Est. ${p.quantidade})</option>`);
-            } catch (erro) {
-                console.error(erro);
-            }
+                
+                // Foca no campo de código de barras automaticamente
+                setTimeout(() => document.getElementById('input-codigo-pdv').focus(), 100);
+            } catch (erro) { console.error(erro); }
         }
 
-        function fecharModal() {
-            document.getElementById('modal-venda').classList.add('hidden');
+        function fecharModal() { document.getElementById('modal-venda').classList.add('hidden'); }
+
+        // Nova Função do Leitor de Código de Barras
+        function biparProduto(event) {
+            if (event.key === 'Enter') {
+                const codigo = document.getElementById('input-codigo-pdv').value.trim();
+                if (!codigo) return;
+
+                const produtoDb = produtosCadastrados.find(p => p.codigo_barras === codigo);
+
+                if (!produtoDb) {
+                    alert("Produto não encontrado no estoque!");
+                    document.getElementById('input-codigo-pdv').value = '';
+                    return;
+                }
+                if (produtoDb.quantidade < 1) {
+                    alert("Atenção: Produto sem estoque disponível!");
+                    document.getElementById('input-codigo-pdv').value = '';
+                    return;
+                }
+
+                const itemExistente = carrinho.find(item => item.produto_id === produtoDb.id);
+                if (itemExistente) {
+                    itemExistente.quantidade += 1;
+                } else {
+                    carrinho.push({ 
+                        produto_id: produtoDb.id, 
+                        nome: produtoDb.nome, 
+                        quantidade: 1, 
+                        preco_unitario: produtoDb.venda 
+                    });
+                }
+
+                document.getElementById('input-codigo-pdv').value = ''; 
+                document.getElementById('input-codigo-pdv').focus();
+                atualizarTabelaCarrinho();
+            }
         }
 
         function adicionarAoCarrinho() {
@@ -893,7 +989,7 @@
         } 
         
         // ==========================================
-        // 5. MÓDULO DE PRODUTOS
+        // 5. MÓDULO DE ESTOQUE E PREÇOS
         // ==========================================
         let listaProdutosCache = []; 
 
@@ -902,98 +998,155 @@
                 const produtos = await window.api.invoke('buscar-produtos');
                 listaProdutosCache = produtos;
                 
-                const tbody = document.getElementById('tabela-produtos-lista');
-                if (!tbody) return;
-                tbody.innerHTML = '';
+                const tbodyEstoque = document.getElementById('tabela-estoque-lista');
+                const tbodyPrecos = document.getElementById('tabela-precos-lista');
+                
+                if (tbodyEstoque) tbodyEstoque.innerHTML = '';
+                if (tbodyPrecos) tbodyPrecos.innerHTML = '';
                 
                 produtos.forEach(p => {
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
-                            <td class="py-4 font-medium text-slate-700">${p.nome}</td>
-                            <td class="py-4 text-center text-slate-600">${p.medida || 'UN'}</td>
-                            <td class="py-4 text-center text-slate-600">${p.quantidade || 0}</td>
-                            <td class="py-4 text-right text-slate-600">${formatarMoeda(p.custo || 0)}</td>
-                            <td class="py-4 text-right text-slate-600">${formatarMoeda(p.venda || 0)}</td>
-                            <td class="py-4 text-center">
-                                <button onclick="editarProduto(${p.id})" class="text-blue-400 hover:text-blue-600 mr-3" title="Editar">✏️</button>
-                                <button onclick="excluirProduto(${p.id})" class="text-red-400 hover:text-red-600" title="Excluir">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
+                    // 1. Tabela de Estoque
+                    if (tbodyEstoque) {
+                        tbodyEstoque.innerHTML += `
+                            <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                                <td class="py-4 text-slate-500 font-mono text-xs">${p.codigo_barras || '-'}</td>
+                                <td class="py-4 font-medium text-slate-700">${p.nome}</td>
+                                <td class="py-4 text-center text-slate-600">${p.medida || 'UN'}</td>
+                                <td class="py-4 text-center font-bold ${p.quantidade <= 0 ? 'text-red-500' : 'text-slate-800'}">${p.quantidade || 0}</td>
+                                <td class="py-4 text-center">
+                                    <button onclick="editarProduto(${p.id})" class="text-blue-400 hover:text-blue-600 mr-3" title="Editar Estoque">✏️</button>
+                                    <button onclick="excluirProduto(${p.id})" class="text-red-400 hover:text-red-600" title="Excluir Produto">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+
+                    // 2. Tabela de Preços e Margem
+                    if (tbodyPrecos) {
+                        let margem = 0;
+                        if (p.venda > 0) margem = ((p.venda - p.custo) / p.venda) * 100;
+                        
+                        let corMargem = 'text-slate-500 bg-slate-100'; 
+                        if (margem > 30) corMargem = 'text-green-700 bg-green-100'; 
+                        if (margem < 15 && p.venda > 0) corMargem = 'text-red-700 bg-red-100'; 
+
+                        tbodyPrecos.innerHTML += `
+                            <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                                <td class="py-4 font-medium text-slate-700">${p.nome}</td>
+                                <td class="py-4 text-right text-red-500">${formatarMoeda(p.custo || 0)}</td>
+                                <td class="py-4 text-right font-bold text-green-600">${formatarMoeda(p.venda || 0)}</td>
+                                <td class="py-4 text-center">
+                                    <span class="px-2 py-1 text-xs font-bold rounded-md ${corMargem}">${margem.toFixed(1)}%</span>
+                                </td>
+                                <td class="py-4 text-center">
+                                    <button onclick="editarPreco(${p.id})" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg transition shadow-sm">
+                                        💲 Alterar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 });
-            } catch (erro) {
-                console.error("Erro ao carregar produtos:", erro);
-            }
+            } catch (erro) { console.error("Erro ao carregar produtos:", erro); }
         }
 
+        // Funções do Estoque
         function abrirModalProduto(modoEdicao = false) {
             document.getElementById('modal-produto').classList.remove('hidden');
             if (!modoEdicao) {
-                document.getElementById('titulo-modal-produto').innerText = 'Novo Produto';
+                document.getElementById('titulo-modal-produto').innerText = 'Cadastro de Estoque';
                 document.getElementById('produto-id').value = '';
                 document.getElementById('produto-nome').value = '';
+                document.getElementById('produto-codigo').value = '';
                 document.getElementById('produto-medida').value = 'UN';
                 document.getElementById('produto-quantidade').value = '0';
-                document.getElementById('produto-custo').value = '0';
-                document.getElementById('produto-venda').value = '0';
             }
         }
 
-        function fecharModalProduto() {
-            document.getElementById('modal-produto').classList.add('hidden');
-        }
+        function fecharModalProduto() { document.getElementById('modal-produto').classList.add('hidden'); }
 
         async function salvarProduto() {
             const id = document.getElementById('produto-id').value;
+            const produtoDb = id ? listaProdutosCache.find(p => p.id == id) : null;
+            
             const produto = {
                 id: id || null,
                 nome: document.getElementById('produto-nome').value,
+                codigo_barras: document.getElementById('produto-codigo').value,
                 medida: document.getElementById('produto-medida').value,
                 quantidade: parseFloat(document.getElementById('produto-quantidade').value),
-                custo: parseFloat(document.getElementById('produto-custo').value),
-                venda: parseFloat(document.getElementById('produto-venda').value)
+                custo: produtoDb ? produtoDb.custo : 0,
+                venda: produtoDb ? produtoDb.venda : 0
             };
 
             if (!produto.nome) return alert("O nome do produto é obrigatório!");
 
             try {
-                if (id) {
-                    await window.api.invoke('atualizar-produto', produto);
-                } else {
-                    await window.api.invoke('salvar-produto', produto);
-                }
+                if (id) await window.api.invoke('atualizar-produto', produto);
+                else await window.api.invoke('salvar-produto', produto);
+                
                 fecharModalProduto();
                 carregarProdutos(); 
                 carregarDashboard();
-            } catch (erro) {
-                alert("Erro ao salvar produto.");
-            }
+            } catch (erro) { alert("Erro ao salvar produto no estoque."); }
         }
 
         function editarProduto(id) {
             const produto = listaProdutosCache.find(p => p.id === id);
             if (produto) {
-                document.getElementById('titulo-modal-produto').innerText = 'Editar Produto';
+                document.getElementById('titulo-modal-produto').innerText = 'Editar Estoque';
                 document.getElementById('produto-id').value = produto.id;
                 document.getElementById('produto-nome').value = produto.nome;
+                document.getElementById('produto-codigo').value = produto.codigo_barras || '';
                 document.getElementById('produto-medida').value = produto.medida;
                 document.getElementById('produto-quantidade').value = produto.quantidade;
-                document.getElementById('produto-custo').value = produto.custo;
-                document.getElementById('produto-venda').value = produto.venda;
                 abrirModalProduto(true); 
             }
         }
 
         async function excluirProduto(id) {
-            if (confirm("Tem certeza que deseja excluir este produto?")) {
+            if (confirm("Tem certeza que deseja excluir este produto do sistema inteiro?")) {
                 try {
                     await window.api.invoke('excluir-produto', id);
                     carregarProdutos();
                     carregarDashboard();
-                } catch (erro) {
-                    alert("Erro ao excluir produto.");
-                }
+                } catch (erro) { alert("Erro ao excluir produto."); }
             }
+        }
+
+        // Funções da Tabela de Preços
+        function editarPreco(id) {
+            const produto = listaProdutosCache.find(p => p.id === id);
+            if (produto) {
+                document.getElementById('preco-id').value = produto.id;
+                document.getElementById('preco-nome-produto').innerText = produto.nome;
+                document.getElementById('preco-custo').value = produto.custo || 0;
+                document.getElementById('preco-venda').value = produto.venda || 0;
+                document.getElementById('modal-preco').classList.remove('hidden');
+            }
+        }
+
+        function fecharModalPreco() { document.getElementById('modal-preco').classList.add('hidden'); }
+
+        async function salvarPreco() {
+            const id = document.getElementById('preco-id').value;
+            const produtoDb = listaProdutosCache.find(p => p.id == id);
+            
+            const produto = {
+                id: id,
+                nome: produtoDb.nome,
+                codigo_barras: produtoDb.codigo_barras,
+                medida: produtoDb.medida,
+                quantidade: produtoDb.quantidade, 
+                custo: parseFloat(document.getElementById('preco-custo').value), 
+                venda: parseFloat(document.getElementById('preco-venda').value)  
+            };
+
+            try {
+                await window.api.invoke('atualizar-produto', produto);
+                fecharModalPreco();
+                carregarProdutos(); 
+            } catch (erro) { alert("Erro ao atualizar os preços."); }
         }
 
         // ==========================================
@@ -1189,9 +1342,7 @@
                         `;
                     }
                 });
-            } catch (erro) {
-                console.error("Erro ao carregar vendas:", erro);
-            }
+            } catch (erro) { console.error("Erro ao carregar vendas:", erro); }
         }
 
         async function cancelarVenda(id) {
@@ -1242,9 +1393,7 @@
                         </tr>
                     `;
                 });
-            } catch (erro) {
-                console.error("Erro ao carregar clientes:", erro);
-            }
+            } catch (erro) { console.error("Erro ao carregar clientes:", erro); }
         }
 
         function abrirModalCliente(modoEdicao = false) {
@@ -1259,9 +1408,7 @@
             }
         }
 
-        function fecharModalCliente() {
-            document.getElementById('modal-cliente').classList.add('hidden');
-        }
+        function fecharModalCliente() { document.getElementById('modal-cliente').classList.add('hidden'); }
 
         async function salvarCliente() {
             const id = document.getElementById('cliente-id').value;
@@ -1276,17 +1423,13 @@
             if (!cliente.nome) return alert("O nome do cliente é obrigatório!");
 
             try {
-                if (id) {
-                    await window.api.invoke('atualizar-cliente', cliente);
-                } else {
-                    await window.api.invoke('salvar-cliente', cliente);
-                }
+                if (id) await window.api.invoke('atualizar-cliente', cliente);
+                else await window.api.invoke('salvar-cliente', cliente);
+                
                 fecharModalCliente();
                 carregarClientes(); 
                 carregarDashboard(); 
-            } catch (erro) {
-                alert("Erro ao salvar cliente.");
-            }
+            } catch (erro) { alert("Erro ao salvar cliente."); }
         }
 
         function editarCliente(id) {
@@ -1308,10 +1451,7 @@
                     await window.api.invoke('excluir-cliente', id);
                     carregarClientes();
                     carregarDashboard();
-                } catch (erro) {
-                    console.error("Erro ao excluir cliente:", erro);
-                    alert("Erro ao excluir cliente.");
-                }
+                } catch (erro) { alert("Erro ao excluir cliente."); }
             }
         }
 
@@ -1373,9 +1513,7 @@
             try {
                 await window.api.invoke('salvar-configuracoes', config);
                 alert("Dados da empresa salvos com sucesso!");
-            } catch (e) {
-                alert("Erro ao salvar dados.");
-            }
+            } catch (e) { alert("Erro ao salvar dados."); }
         }
 
         // ==========================================
@@ -1427,9 +1565,7 @@
             document.getElementById('modal-conta').classList.remove('hidden');
         }
 
-        function fecharModalConta() {
-            document.getElementById('modal-conta').classList.add('hidden');
-        }
+        function fecharModalConta() { document.getElementById('modal-conta').classList.add('hidden'); }
 
         async function salvarConta() {
             const conta = {
@@ -1478,14 +1614,35 @@
         }
 
         // ==========================================
+        // MÓDULO DE ATUALIZAÇÃO (AUTO-UPDATER)
+        // ==========================================
+        if (window.api && window.api.on) {
+            window.api.on('atualizacao-baixada', () => {
+                const banner = document.getElementById('banner-atualizacao');
+                banner.classList.remove('hidden');
+                setTimeout(() => {
+                    banner.classList.remove('translate-y-10', 'opacity-0');
+                }, 50);
+            });
+        }
+
+        function ignorarAtualizacao() {
+            const banner = document.getElementById('banner-atualizacao');
+            banner.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => { banner.classList.add('hidden'); }, 300);
+        }
+
+        function instalarAtualizacao() {
+            window.api.invoke('instalar-atualizacao'); 
+        }
+
+        // ==========================================
         // MÓDULO DE LOGIN
         // ==========================================
         let usuarioLogado = null;
 
         function verificarEnterLogin(event) {
-            if (event.key === 'Enter') {
-                realizarLogin();
-            }
+            if (event.key === 'Enter') realizarLogin();
         }
 
         async function realizarLogin() {
@@ -1503,14 +1660,12 @@
                 const resposta = await window.api.invoke('fazer-login', { usuario: usuarioInput, senha: senhaInput });
                 
                 if (resposta.sucesso) {
-                    usuarioLogado = resposta.dados; // Salva quem está operando o sistema
+                    usuarioLogado = resposta.dados; 
                     
-                    // Esconde a tela de login (fade out)
                     const telaLogin = document.getElementById('tela-login');
                     telaLogin.classList.add('opacity-0');
                     setTimeout(() => { telaLogin.classList.add('hidden'); }, 500);
 
-                    // Carrega os dados do sistema agora que estamos autenticados!
                     inicializarSistema();
                 } else {
                     msgErro.innerText = resposta.mensagem;
